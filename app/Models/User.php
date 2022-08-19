@@ -62,4 +62,12 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
+    /**
+     * Get all blogs of particular user
+     */
+    public function blogs() {
+
+        return $this->hasMany('App\Models\Blog');
+    }
+
 }

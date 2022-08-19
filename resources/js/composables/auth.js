@@ -74,16 +74,18 @@ export default function useAuth() {
     }
 
     const getUser = () => {
-        axios.get('/api/refresh-token', {
-            headers: {
-              Authorization: 'Bearer ' + localStorage.getItem('token') 
-            }
-        })
-        .then(response => {
-            if(response.data.status === 'success'){
-                loginUser(response)
-            }
-        })
+        if(localStorage.getItem('token') ){
+            axios.get('/api/refresh-token', {
+                headers: {
+                Authorization: 'Bearer ' + localStorage.getItem('token') 
+                }
+            })
+            .then(response => {
+                if(response.data.status === 'success'){
+                    loginUser(response)
+                }
+            })
+        }
     }
 
     const logout = async () => {
@@ -91,18 +93,27 @@ export default function useAuth() {
 
         processing.value = true
 
-        axios.post('/api/logout')
-            .then(response => router.push({ name: 'login' }))
-            .catch(error => {
-                swal({
-                    icon: 'error',
-                    title: error.response.status,
-                    text: error.response.statusText
-                })
+        axios.post('/api/logout', {}, {
+            headers: {
+              Authorization: 'Bearer ' + localStorage.getItem('token') 
+            }
+        })
+        .then((response) => {
+                localStorage.setItem('loggedIn', '')
+                localStorage.setItem('token', '')
+                router.push({ name: 'login' })
+            }
+        )
+        .catch(error => {
+            swal({
+                icon: 'error',
+                title: error.response.status,
+                text: error.response.statusText
             })
-            .finally(() => {
-                processing.value = false
-            })
+        })
+        .finally(() => {
+            processing.value = false
+        })
     }
 
 
@@ -115,6 +126,6 @@ export default function useAuth() {
         submitSignUp,
         user,
         getUser,
-        logout
+        logout,
     }
 }

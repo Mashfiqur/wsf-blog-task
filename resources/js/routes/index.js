@@ -4,19 +4,20 @@ import AuthenticatedLayout from "../layouts/Authenticated";
 import GuestLayout from "../layouts/Guest";
 
 import BlogsIndex from '../components/Blogs/Index'
-import BlogsCreate from '../components/Blogs/Create'
-import BlogsEdit from '../components/Blogs/Edit'
+import BlogsCreateEdit from '../components/Blogs/CreateEdit'
 import Login from '../components/Login'
 import Landing from '../components/Landing'
 import SignUp from '../components/SignUp'
 
 
-function auth(to, from, next) {
+function guardCheck(to, from, next) {
     if (JSON.parse(localStorage.getItem('loggedIn'))) {
         next()
+        return
     }
 
     next('/login')
+    return
 }
 
 const routes = [
@@ -30,53 +31,38 @@ const routes = [
                 name: 'landing',
                 component: Landing
             },
-        ]
-    },
-    {
-        path: '/login',
-        redirect: { name: 'login' },
-        component: GuestLayout,
-        children: [
             {
                 path: '/login',
                 name: 'login',
                 component: Login
             },
-        ]
-    },
-    {
-        path: '/signup',
-        redirect: { name: 'signup' },
-        component: GuestLayout,
-        children: [
             {
                 path: '/signup',
                 name: 'signup',
                 component: SignUp
-            },
+            }
         ]
     },
     {
+        path: '',
+        beforeEnter: guardCheck,
+        redirect: { name: 'blogs.index' },
         component: AuthenticatedLayout,
-        beforeEnter: auth,
         children: [
             {
                 path: '/blogs',
                 name: 'blogs.index',
-                component: BlogsIndex,
-                meta: { title: 'Blogs' }
+                component: BlogsIndex
             },
             {
                 path: '/blogs/create',
                 name: 'blogs.create',
-                component: BlogsCreate,
-                meta: { title: 'Add New Blog' }
+                component: BlogsCreateEdit
             },
             {
                 path: '/blogs/edit/:id',
                 name: 'blogs.edit',
-                component: BlogsEdit,
-                meta: { title: 'Edit Blog' }
+                component: BlogsCreateEdit
             },
         ]
     }

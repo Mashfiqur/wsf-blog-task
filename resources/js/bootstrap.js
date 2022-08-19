@@ -16,10 +16,9 @@ window.axios.interceptors.response.use(
     response => response,
     error => {
         if (error.response?.status === 401 || error.response?.status === 419) {
-            if (JSON.parse(localStorage.getItem('loggedIn'))) {
-                localStorage.setItem('loggedIn', false)
-                location.assign('/login')
-            }
+            localStorage.setItem('token', '')
+            localStorage.setItem('loggedIn', JSON.stringify(false))
+            location.assign('/login')
         }
 
         return Promise.reject(error)

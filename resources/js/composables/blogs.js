@@ -1,101 +1,107 @@
 import { ref, inject } from 'vue'
 import { useRouter } from 'vue-router'
 
-export default function usePosts() {
-    const posts = ref({})
-    const post = ref({
+export default function useBlogs() {
+    const blogs = ref({})
+    const blog = ref({
         title: '',
         content: '',
-        category_id: '',
-        thumbnail: ''
     })
     const router = useRouter()
     const validationErrors = ref({})
     const isLoading = ref(false)
     const swal = inject('$swal')
 
-    const getPosts = async (
+    const getBlogs = async (
         page = 1,
-        search_category = '',
-        search_id = '',
         search_title = '',
         search_content = '',
-        search_global = '',
         order_column = 'created_at',
         order_direction = 'desc'
     ) => {
-        axios.get('/api/posts?page=' + page +
-            '&search_category=' + search_category +
-            '&search_id=' + search_id +
+        axios.get('/api/blogs?page=' + page +
             '&search_title=' + search_title +
             '&search_content=' + search_content +
-            '&search_global=' + search_global +
             '&order_column=' + order_column +
-            '&order_direction=' + order_direction)
-            .then(response => {
-                posts.value = response.data;
-            })
-    }
-
-    const getPost = async (id) => {
-        axios.get('/api/posts/' + id)
-            .then(response => {
-                post.value = response.data.data;
-            })
-    }
-
-    const storePost = async (post) => {
-        if (isLoading.value) return;
-
-        isLoading.value = true
-        validationErrors.value = {}
-
-        let serializedPost = new FormData()
-        for (let item in post) {
-            if (post.hasOwnProperty(item)) {
-                serializedPost.append(item, post[item])
+            '&order_direction=' + order_direction, {
+                headers: {
+                  Authorization: 'Bearer ' + localStorage.getItem('token') 
+                }
+        })
+        .then(response => {
+            if(response.data.status === 'success'){
+                blogs.value = response.data.blogs;
             }
-        }
-
-        axios.post('/api/posts', serializedPost)
-            .then(response => {
-                router.push({name: 'posts.index'})
-                swal({
-                    icon: 'success',
-                    title: 'Post saved successfully'
-                })
-            })
-            .catch(error => {
-                if (error.response?.data) {
-                    validationErrors.value = error.response.data.errors
-                }
-            })
-            .finally(() => isLoading.value = false)
+        })
     }
 
-    const updatePost = async (post) => {
+    const getBlog = async (id) => {
+        axios.get('/api/blogs/' + id, {
+            headers: {
+              Authorization: 'Bearer ' + localStorage.getItem('token') 
+            }
+        })
+        .then(response => {
+            if(response.data.status === 'success'){
+                blog.value = response.data.blog;
+            }
+        })
+    }
+
+    const storeBlog = async (blog) => {
         if (isLoading.value) return;
+        console.log(blog)
+        isLoading.value = true
+        validationErrors.value = {}
+
+        axios.post('/api/blogs', blog, {
+            headers: {
+              Authorization: 'Bearer ' + localStorage.getItem('token') 
+            }
+        })
+        .then(response => {
+            router.push({name: 'blogs.index'})
+            swal({
+                icon: 'success',
+                title: 'Blog saved successfully'
+            })
+        })
+        .catch(error => {
+            if (error.response?.data) {
+                validationErrors.value = error.response.data.errors
+            }
+        })
+        .finally(() => isLoading.value = false)
+    }
+
+    const updateBlog = async (blog) => {
+        if (isLoading.value) return;
+        console.log(blog)
 
         isLoading.value = true
         validationErrors.value = {}
 
-        axios.put('/api/posts/' + post.id, post)
-            .then(response => {
-                router.push({name: 'posts.index'})
-                swal({
-                    icon: 'success',
-                    title: 'Post saved successfully'
-                })
+        axios.put('/api/blogs/' + blog.id, blog, {
+            headers: {
+              Authorization: 'Bearer ' + localStorage.getItem('token') 
+            }
+        })
+        .then(response => {
+            router.push({name: 'blogs.index'})
+            swal({
+                icon: 'success',
+                title: 'Blog saved successfully'
             })
-            .catch(error => {
-                if (error.response?.data) {
-                    validationErrors.value = error.response.data.errors
-                }
-            })
-            .finally(() => isLoading.value = false)
+        })
+        .catch(error => {
+            if (error.response?.data) {
+                validationErrors.value = error.response.data.errors
+            }
+        })
+        .finally(() => isLoading.value = false)
     }
 
-    const deletePost = async (id) => {
+    const deleteBlog = async (id) => {
         swal({
             title: 'Are you sure?',
             text: 'You won\'t be able to revert this action!',
@@ -109,34 +115,38 @@ export default function usePosts() {
         })
             .then(result => {
                 if (result.isConfirmed) {
-                    axios.delete('/api/posts/' + id)
-                        .then(response => {
-                            getPosts()
-                            router.push({name: 'posts.index'})
-                            swal({
-                                icon: 'success',
-                                title: 'Post deleted successfully'
-                            })
+                    axios.delete('/api/blogs/' + id, {
+                        headers: {
+                          Authorization: 'Bearer ' + localStorage.getItem('token') 
+                        }
+                    })
+                    .then(response => {
+                        getBlogs()
+                        router.push({name: 'blogs.index'})
+                        swal({
+                            icon: 'success',
+                            title: 'Blog deleted successfully'
                         })
-                        .catch(error => {
-                            swal({
-                                icon: 'error',
-                                title: 'Something went wrong'
-                            })
+                    })
+                    .catch(error => {
+                        swal({
+                            icon: 'error',
+                            title: 'Something went wrong'
                         })
+                    })
                 }
             })
 
     }
 
     return {
-        posts,
-        post,
-        getPosts,
-        getPost,
-        storePost,
-        updatePost,
-        deletePost,
+        blogs,
+        blog,
+        getBlogs,
+        getBlog,
+        storeBlog,
+        updateBlog,
+        deleteBlog,
         validationErrors,
         isLoading
     }

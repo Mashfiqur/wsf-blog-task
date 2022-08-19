@@ -13,12 +13,12 @@
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
                         <router-link :to="{ name: 'blogs.index' }"  class="nav-link active">
-                            Posts
+                            Blogs
                         </router-link>
                     </li>
                     <li class="nav-item">
                         <router-link :to="{ name: 'blogs.create' }" class="nav-link active">
-                            Create Post
+                            Create Blog
                         </router-link>
                     </li>
                     <li class="nav-item">
