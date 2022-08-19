@@ -1,0 +1,82 @@
+version: "3.7"
+
+#Volumes
+volumes:
+  dbdata:
+    driver: local
+
+services:
+    # image project
+    app:
+        container_name: wsf-task-app
+        build:
+            context: .
+            dockerfile: ./.docker/php/Dockerfile
+        image: wsf-task-app-image
+        restart: unless-stopped
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+        depends_on: 
+            - redis
+        networks: 
+            - wsf-net
+    
+    # nginx
+    nginx:
+        container_name: wsf-task-nginx
+        image: nginx:alpine
+        restart: unless-stopped
+        ports: 
+            - "8087:80"
+        volumes: 
+            - ./:/var/www
+            - ./.docker/nginx/:/etc/nginx/conf.d/
+        networks: 
+            - wsf-net
+
+    # db mysql
+    mysql:
+        image: mysql:8.0.28
+        restart: unless-stopped
+        tty: true
+        environment: 
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ROOT_HOST: '%'
+        volumes: 
+            - ./.docker/mysql/my.cnf:/etc/my.cnf
+            - dbdata:/var/lib/mysql/
+        ports: 
+            - "3386:3306"
+        networks: 
+            - wsf-net
+
+    # queue
+    queue:
+        container_name: wsf-task-queue
+        image: wsf-task-app-image
+        restart: unless-stopped
+        command: "php artisan queue:work"
+        volumes: 
+            - ./:/var/www
+        depends_on: 
+            - redis
+            - app
+        networks: 
+            - wsf-net
+
+    # redis
+    redis:
+        container_name: wsf-task-redis
+        image: redis:latest
+        volumes:
+            - ./redis-data:/data
+        healthcheck:
+            test: "echo redis ok"
+        networks: 
+            - wsf-net
+
+networks: 
+    wsf-net:
+        external: true
